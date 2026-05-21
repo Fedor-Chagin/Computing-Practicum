@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+.venv
+*.egg-info/
+dist/
+build/
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Временные файлы
+*.log
+*.tmp
+tempCodeRunnerFile.py
+
+# Изображения (если не нужно в репозитории)
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Docker
+*.tar
+*.tar.gz
+
+# Файлы с секретами/ключами
+.env
+.secrets
+*key*.py
+*secret*.py
+
+# Локальные настройки
+*.local
