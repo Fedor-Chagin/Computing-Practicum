@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PNG Size Detector</title>
+    <title>Чагин Фёдор, ЛР-4</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
@@ -68,11 +68,15 @@
             const [loading, setLoading] = React.useState(false);
             const [error, setError] = React.useState(null);
 
+            // Загрузка сохранённого изображения из localStorage при старте
             React.useEffect(() => {
-                fetch('/last-image')
-                                    .then(res => res.json())
-                    .then(data => setLastImage(data))
-                    .catch(() => setLastImage(null));
+                                const saved = localStorage.getItem('lastImageData');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        setLastImage(parsed);
+                    } catch(e) {}
+                }
             }, []);
 
             const handleFileChange = (e) => {
@@ -82,11 +86,11 @@
 
             const handleUpload = async () => {
                 if (!selectedFile) {
-                    setError("Выберите PNG файл");
+                    setError("Choose a PNG file");
                     return;
                 }
                 if (!selectedFile.type.includes('png')) {
-                    setError("Можно загружать только PNG файлы");
+                    setError("Only PNG files are allowed");
                     return;
                 }
 
@@ -100,18 +104,30 @@
                     const data = await response.json();
 
                     if (data.result === "invalid filetype") {
-                        setError("Неверный тип файла. Загрузите PNG.");
+                        setError("Invalid file type. Please upload a PNG.");
                         setResult(null);
                     } else if (data.width) {
                         setResult(data);
-                        const thumbResponse = await fetch('/last-image');
-                        const thumbData = await thumbResponse.json();
-                        if (thumbData.width) setLastImage(thumbData);
+
+                        // Сохраняем изображение как Data URL в localStorage
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const imageData = {
+                                width: data.width,
+                                height: data.height,
+                                thumbnail: reader.result,
+                                timestamp: Date.now()
+                            };
+                            setLastImage(imageData);
+                            localStorage.setItem('lastImageData', JSON.stringify(imageData));
+                        };
+                        reader.readAsDataURL(selectedFile);
+
                     } else {
-                        setError("Ошибка обработки");
+                        setError("Error processing image");
                     }
                 } catch (err) {
-                    setError("Ошибка сети");
+                    setError("Network error");
                 } finally {
                     setLoading(false);
                 }
@@ -120,11 +136,11 @@
             return (
                 <div>
                     <div className="card">
-                        <h1>Определитель размера PNG</h1>
+                        <h1>Определитель размера PNG (Чагин Фёдор, ЛР-4)</h1>
                         <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center'}}>
                             <input type="file" accept="image/png" onChange={handleFileChange} />
                             <button onClick={handleUpload} disabled={loading}>
-                                {loading ? 'Обработка...' : 'Узнать размер'}
+                                {loading ? 'Processing...' : 'Get Size'}
                             </button>
                         </div>
                     </div>
@@ -133,23 +149,23 @@
 
                     {result && result.width && (
                         <div className="card result">
-                            <h3>Результат</h3>
-                            <p><strong>Ширина:</strong> {result.width} px</p>
-                            <p><strong>Высота:</strong> {result.height} px</p>
+                            <h3>Result</h3>
+                            <p><strong>Width:</strong> {result.width} px</p>
+                            <p><strong>Height:</strong> {result.height} px</p>
                             <pre>{JSON.stringify(result, null, 2)}</pre>
                         </div>
                     )}
 
                     <div className="card">
-                        <h3>Последнее загруженное изображение</h3>
+                        <h3>Last Uploaded Image</h3>
                         {lastImage && lastImage.thumbnail ? (
                             <div>
                                 <img src={lastImage.thumbnail} alt="thumbnail" className="thumbnail" />
-                                <p><strong>Размеры:</strong> {lastImage.width} × {lastImage.height} px</p>
-                                <p><strong>Файл:</strong> {lastImage.filename}</p>
+                                <p><strong>Size:</strong> {lastImage.width} x {lastImage.height} px</p>
+                                <p><strong>Uploaded:</strong> {new Date(lastImage.timestamp).toLocaleString()}</p>
                             </div>
                         ) : (
-                            <p style={{color: '#666'}}>Нет загруженных изображений</p>
+                            <p>No images uploaded yet</p>
                         )}
                     </div>
                 </div>
