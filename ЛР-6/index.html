@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Planner - WebAssembly Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2, h3 {
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button.delete {
+            background-color: #f44336;
+        }
+        
+        button.delete:hover {
+            background-color: #d32f2f;
+        }
+        
+        button.clear {
+            background-color: #ff9800;
+        }
+        
+        button.clear:hover {
+            background-color: #fb8c00;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .totals {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f2f2f2;
+            border-radius: 4px;
+        }
+        
+        .category-totals {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .category-total-item {
+            background-color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        
+        .budget-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .budget-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .budget-stat {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .progress-bar {
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            background-color: #4CAF50;
+            height: 25px;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .error-message {
+            color: #f44336;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            color: #4CAF50;
+            margin-top: 5px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                width: 100%;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Budget Planner / Expense Tracker</h1>
+            <p>Track your expenses and manage your budget with WebAssembly</p>
+        </div>
+        
+        <div class="expense-form">
+            <h2>Add New Expense</h2>
+            
+            <form id="expenseForm">
+                <div class="form-row" style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="expenseDate">Date:</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1;">
+                        <label for="expenseCategory">Category:</label>
+                        <select id="expenseCategory" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1;">
+                        <label for="expenseAmount">Amount:</label>
+                        <input type="number" id="expenseAmount" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expenseDescription">Description:</label>
+                    <input type="text" id="expenseDescription" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="addExpenseBtn">Add Expense</button>
+                    <button type="button" id="clearAllBtn" class="clear">Clear All Expenses</button>
+                </div>
+                
+                <div id="messageArea" class="hidden"></div>
+            </form>
+        </div>
+        
+        <div class="expense-list">
+            <h2>Expense List</h2>
+            
+            <table id="expenseTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTableBody">
+                    <tr id="noExpensesRow">
+                        <td colspan="5" style="text-align: center;">No expenses added yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Monthly Budget Section -->
+        <div class="budget-section">
+            <h3>Monthly Budget</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="number" id="monthlyBudgetInput" step="10" placeholder="Enter budget amount" style="width: 180px;">
+                <button id="setBudgetBtn">Set Budget</button>
+                <button id="resetBudgetBtn" class="clear">Reset Budget</button>
+            </div>
+            <div id="budgetDisplay"></div>
+        </div>
+        
+        <div class="totals">
+            <h2>Expense Summary</h2>
+            
+            <div class="total-expenses">
+                <strong>Total Expenses:</strong> <span id="totalExpenses">$0.00</span>
+            </div>
+            
+            <div class="category-totals-section">
+                <h3>Category Breakdown:</h3>
+                <div id="categoryTotals" class="category-totals">
+                    <div id="noCategoriesMessage">No expenses added yet</div>
+                </div>
+            </div>
+        </div>
+
+                <!-- Currency Selection -->
+        <div class="currency-section" style="margin-top: 15px; padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <strong>Currency:</strong>
+                <select id="currencySelect" style="padding: 8px; border-radius: 4px;">
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="RUB">RUB (₽)</option>
+                </select>
+                <span id="currencySymbol" style="font-size: 18px;">$</span>
+                <button id="refreshRatesBtn" style="background-color: #2196F3; padding: 8px 12px;">Update Rates</button>
+                <span id="rateInfo" style="font-size: 12px; color: #666;"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+    <script>
+        var Module = {
+            onRuntimeInitialized: function() {
+                console.log("WebAssembly module initialized");
+            }
+        };
+
+        BudgetPlanner(Module).then(function(initializedModule) {
+            window.Module = initializedModule;
+            console.log("Module is ready");
+            
+            // Set default date
+            document.getElementById('expenseDate').valueAsDate = new Date();
+            
+            // Load budget from localStorage
+            loadBudgetFromStorage();
+            
+            // Initial UI update
+            updateExpenseTable();
+            updateTotalExpenses(Module._jsGetTotalExpenses());
+            updateCategoryTotals();
+            updateBudgetDisplay();
+        }).catch(function(error) {
+            console.error("Failed to initialize WebAssembly module:", error);
+        });
+        
+        // Budget functions
+        function loadBudgetFromStorage() {
+            const saved = localStorage.getItem('monthlyBudget');
+            if (saved) {
+                const budget = parseFloat(saved);
+                document.getElementById('monthlyBudgetInput').value = budget;
+                updateBudgetDisplay();
+            }
+        }
+        
+        function saveBudgetToStorage(budget) {
+            localStorage.setItem('monthlyBudget', budget);
+        }
+        
+        function updateBudgetDisplay() {
+            const budgetInput = document.getElementById('monthlyBudgetInput');
+            const budget = parseFloat(budgetInput.value);
+            
+            if (isNaN(budget) || budget <= 0 || !window.Module) {
+                document.getElementById('budgetDisplay').innerHTML = '<p style="color: #666;">No budget set. Enter amount and click Set Budget.</p>';
+                return;
+            }
+            
+            const spent = window.Module._jsGetTotalExpenses();
+            const remaining = budget - spent;
+            const percentage = Math.min((spent / budget) * 100, 100);
+            
+            let fillColor = '#4CAF50';
+            if (percentage > 90) fillColor = '#f44336';
+            else if (percentage > 70) fillColor = '#ff9800';
+            
+            document.getElementById('budgetDisplay').innerHTML = `
+                <div class="budget-stats">
+                    <div class="budget-stat">
+                        <strong>Budget:</strong><br>
+                        $${budget.toFixed(2)}
+                    </div>
+                    <div class="budget-stat">
+                        <strong>Spent:</strong><br>
+                        $${spent.toFixed(2)}
+                    </div>
+                    <div class="budget-stat">
+                        <strong>Remaining:</strong><br>
+                        <span style="color: ${remaining < 0 ? '#f44336' : '#4CAF50'}; font-weight: bold;">
+                            $${remaining.toFixed(2)}
+                        </span>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percentage}%; background: ${fillColor};">
+                        ${percentage.toFixed(0)}%
+                    </div>
+                </div>
+                ${remaining < 0 ? `<div style="color: #f44336; margin-top: 10px; text-align: center;">Over budget by $${Math.abs(remaining).toFixed(2)}</div>` : percentage > 90 ? `<div style="color: #ff9800; margin-top: 10px; text-align: center;">Warning: Only $${remaining.toFixed(2)} left</div>` : ''}
+            `;
+        }
+        
+        // Setup budget buttons
+        document.getElementById('setBudgetBtn').addEventListener('click', function() {
+            const input = document.getElementById('monthlyBudgetInput');
+            const budgetUSD = parseFloat(input.value);
+            
+            if (isNaN(budgetUSD) || budgetUSD <= 0) {
+                alert('Please enter a valid budget amount');
+                return;
+            }
+            
+            localStorage.setItem('monthlyBudget', budgetUSD);
+            if (window.updateBudgetDisplay) {
+                window.updateBudgetDisplay();
+            }
+            alert('Budget set to $' + budgetUSD.toFixed(2));
+        });
+        
+        document.getElementById('resetBudgetBtn').addEventListener('click', function() {
+            if (confirm('Reset monthly budget?')) {
+                localStorage.removeItem('monthlyBudget');
+                document.getElementById('monthlyBudgetInput').value = '';
+                if (window.updateBudgetDisplay) {
+                    window.updateBudgetDisplay();
+                }
+                alert('Budget reset');
+            }
+        });
+        
+        // Load saved budget
+        const savedBudget = localStorage.getItem('monthlyBudget');
+        if (savedBudget) {
+            document.getElementById('monthlyBudgetInput').value = parseFloat(savedBudget);
+            if (window.updateBudgetDisplay) {
+                setTimeout(function() {
+                    window.updateBudgetDisplay();
+                }, 100);
+            }
+        }
+        
+        document.getElementById('resetBudgetBtn').addEventListener('click', function() {
+            if (confirm('Reset monthly budget?')) {
+                localStorage.removeItem('monthlyBudget');
+                document.getElementById('monthlyBudgetInput').value = '';
+                updateBudgetDisplay();
+                alert('Budget reset');
+            }
+        });
+    </script>
+    <script src="app.js"></script>
+    <script src="budget.js"></script>
+</body>
+</html>
