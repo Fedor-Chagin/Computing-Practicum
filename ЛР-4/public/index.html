@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PNG Size Detector</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #1a2a3a;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1, h3 { margin-top: 0; color: #1e3a5f; }
+        input, button {
+            padding: 10px 16px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: 8px;
+        }
+        button:hover { background: #0f2b44; }
+        button:disabled { background: #9aaebf; cursor: not-allowed; }
+        .result {
+            background: #e8f0fe;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .thumbnail {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .error { color: #c62828; background: #ffebee; padding: 12px; border-radius: 8px; }
+        pre { background: #1e2a36; color: #eef; padding: 12px; border-radius: 8px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function App() {
+            const [selectedFile, setSelectedFile] = React.useState(null);
+            const [result, setResult] = React.useState(null);
+            const [lastImage, setLastImage] = React.useState(null);
+            const [loading, setLoading] = React.useState(false);
+            const [error, setError] = React.useState(null);
+
+            React.useEffect(() => {
+                fetch('/last-image')
+                                    .then(res => res.json())
+                    .then(data => setLastImage(data))
+                    .catch(() => setLastImage(null));
+            }, []);
+
+            const handleFileChange = (e) => {
+                setSelectedFile(e.target.files[0]);
+                setError(null);
+            };
+
+            const handleUpload = async () => {
+                if (!selectedFile) {
+                    setError("Выберите PNG файл");
+                    return;
+                }
+                if (!selectedFile.type.includes('png')) {
+                    setError("Можно загружать только PNG файлы");
+                    return;
+                }
+
+                setLoading(true);
+                setError(null);
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+
+                try {
+                    const response = await fetch('/size2json', { method: 'POST', body: formData });
+                    const data = await response.json();
+
+                    if (data.result === "invalid filetype") {
+                        setError("Неверный тип файла. Загрузите PNG.");
+                        setResult(null);
+                    } else if (data.width) {
+                        setResult(data);
+                        const thumbResponse = await fetch('/last-image');
+                        const thumbData = await thumbResponse.json();
+                        if (thumbData.width) setLastImage(thumbData);
+                    } else {
+                        setError("Ошибка обработки");
+                    }
+                } catch (err) {
+                    setError("Ошибка сети");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div>
+                    <div className="card">
+                        <h1>Определитель размера PNG</h1>
+                        <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center'}}>
+                            <input type="file" accept="image/png" onChange={handleFileChange} />
+                            <button onClick={handleUpload} disabled={loading}>
+                                {loading ? 'Обработка...' : 'Узнать размер'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {error && <div className="card error">{error}</div>}
+
+                    {result && result.width && (
+                        <div className="card result">
+                            <h3>Результат</h3>
+                            <p><strong>Ширина:</strong> {result.width} px</p>
+                            <p><strong>Высота:</strong> {result.height} px</p>
+                            <pre>{JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    )}
+
+                    <div className="card">
+                        <h3>Последнее загруженное изображение</h3>
+                        {lastImage && lastImage.thumbnail ? (
+                            <div>
+                                <img src={lastImage.thumbnail} alt="thumbnail" className="thumbnail" />
+                                <p><strong>Размеры:</strong> {lastImage.width} × {lastImage.height} px</p>
+                                <p><strong>Файл:</strong> {lastImage.filename}</p>
+                            </div>
+                        ) : (
+                            <p style={{color: '#666'}}>Нет загруженных изображений</p>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

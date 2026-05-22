@@ -1,0 +1,9 @@
+{
+    "name": "size2json-minimal",
+    "version": "1.0.0",
+    "dependencies": {
+        "express": "^4.18.2",
+        "image-size": "^1.1.1",
+        "multer": "^1.4.5-lts.1"
+    }
+}

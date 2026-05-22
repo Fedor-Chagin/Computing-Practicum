@@ -286,7 +286,7 @@ config/secrets.yml
 # =================================
 # Docker
 # =================================
-**/Dockerfile
+# **/Dockerfile
 **/.dockerignore
 *.tar
 *.tar.gz
