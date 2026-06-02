@@ -1,0 +1,99 @@
+// Импортируем Bootstrap
+@import "bootstrap/scss/bootstrap";
+
+// ТВОИ СТИЛИ (перебивают Bootstrap благодаря специфичности)
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #131418 !important;
+    color: white !important;
+    font-family: monospace !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: #17181c;
+    padding: 20px;
+}
+
+nav {
+    max-width: 1200px;
+    margin: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 25px;
+    font-family: sans-serif;
+}
+
+nav a {
+    color: white !important;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+nav a:hover {
+    text-decoration: underline !important;
+}
+
+.lang {
+    border: 1px solid #404040;
+    padding: 2px 8px;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px 60px 20px;
+}
+
+/* УБЕРИ стиль Bootstrap для .card */
+.card {
+    width: 500px;
+    text-align: center;
+    background: transparent !important;
+    border: none !important;
+}
+
+.avatar {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 25px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h1 {
+    font-family: sans-serif;
+    font-size: 42px;
+    margin-bottom: 20px;
+    color: white !important;
+}
+
+.description {
+    color: #cccccc !important;
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #404040;
+    margin: 35px 0;
+}
+
+footer {
+    text-align: center;
+    padding: 30px;
+    color: #cccccc;
+}
